@@ -7,10 +7,29 @@ app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')
 
 API_URL = 'http://localhost:5000'  # Backend API
 
-# Home Page
+# Home (Login) Page
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('login.html')
+
+# Register Page
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
+        
+        response = requests.post(f'{API_URL}/register', json={'username': username, 'email': email, 'password': password})
+        
+        if response.status_code == 201:
+            flash('Registration successful! You can now log in.', 'success')
+            return redirect(url_for('home'))
+        
+        flash('Registration failed. Email may already be in use.', 'error')
+        return redirect(url_for('register'))
+    
+    return render_template('register.html')
 
 # Login Route
 @app.route('/login', methods=['POST'])
@@ -33,22 +52,6 @@ def login():
 def logout():
     session.pop('token', None)
     flash('You have been logged out.', 'info')
-    return redirect(url_for('home'))
-
-# Register Route
-@app.route('/register', methods=['POST'])
-def register():
-    username = request.form['username']
-    email = request.form['email']
-    password = request.form['password']
-    
-    response = requests.post(f'{API_URL}/register', json={'username': username, 'email': email, 'password': password})
-    
-    if response.status_code == 201:
-        flash('Registration successful! You can now log in.', 'success')
-        return redirect(url_for('home'))
-    
-    flash('Registration failed. Email may already be in use.', 'error')
     return redirect(url_for('home'))
 
 # Search Books
